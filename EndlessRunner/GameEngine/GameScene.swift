@@ -74,6 +74,24 @@ class GameScene: SKScene {
         setupGround()
         setupPlayer()
         setupBackground()
+
+        // Spawn initial chunks so player sees obstacles immediately
+        spawnInitialChunks()
+    }
+
+    private func spawnInitialChunks() {
+        // Spawn 3 initial chunks to fill the screen
+        Task {
+            for i in 0..<3 {
+                let chunkData = await levelGenerator.generateNextChunk(
+                    screenWidth: size.width,
+                    distance: 0
+                )
+                await MainActor.run {
+                    spawnChunk(chunkData)
+                }
+            }
+        }
     }
 
     private func setupScene() {
@@ -134,6 +152,7 @@ class GameScene: SKScene {
         playerEntity.position = CGPoint(x: playerX, y: playerY)
 
         if let renderNode = playerEntity.renderNode {
+            renderNode.zPosition = 10  // Ensure player is above ground
             gameLayer.addChild(renderNode)
         }
 
@@ -179,12 +198,18 @@ class GameScene: SKScene {
             return
         }
 
+        // Initialize lastUpdateTime on first frame to prevent huge deltaTime
+        if lastUpdateTime == 0 {
+            lastUpdateTime = currentTime
+        }
+
         let deltaTime = currentTime - lastUpdateTime
         lastUpdateTime = currentTime
 
         // Update game speed
         manager.updateSpeed(deltaTime)
-        manager.updateDistance(Double(manager.currentSpeed) * deltaTime / 100)
+        // Convert pixels per second to meters (divide by 100 pixels = 1 meter)
+        manager.updateDistance(Double(manager.currentSpeed) * deltaTime / 100.0)
 
         // Update world velocity based on current speed
         updateWorldVelocity(speed: manager.currentSpeed)
