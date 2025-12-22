@@ -2,12 +2,13 @@ import SpriteKit
 
 /// Singleton Texture Manager - Runtime Rasterization and Caching Pipeline
 /// Converts vector shapes to cached textures for optimal performance
-@MainActor
+/// Note: Texture generation can happen on any thread, but cache access is synchronized
 class ShapeTextureManager {
     static let shared = ShapeTextureManager()
 
     private var cache: [String: SKTexture] = [:]
     private let defaultSize: CGSize = CGSize(width: 64, height: 64)
+    private let cacheLock = NSLock()
 
     private init() {}
 
@@ -17,17 +18,26 @@ class ShapeTextureManager {
         let actualSize = size ?? defaultSize
         let key = cacheKey(shapeType: shapeType, color: color, size: actualSize)
 
+        cacheLock.lock()
         if let cached = cache[key] {
+            cacheLock.unlock()
             return cached
         }
+        cacheLock.unlock()
 
         let texture = generateTexture(shapeType: shapeType, color: color, size: actualSize)
+
+        cacheLock.lock()
         cache[key] = texture
+        cacheLock.unlock()
+
         return texture
     }
 
     func clearCache() {
+        cacheLock.lock()
         cache.removeAll()
+        cacheLock.unlock()
     }
 
     // MARK: - Private Helpers
