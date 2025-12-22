@@ -159,7 +159,7 @@ class EntityFactory {
 
 // MARK: - Obstacle Type Configuration
 
-enum ObstacleType {
+enum ObstacleType: Sendable {
     case spike
     case block
     case triangle
@@ -225,3 +225,4 @@ enum BackgroundLayer {
         }
     }
 }
+

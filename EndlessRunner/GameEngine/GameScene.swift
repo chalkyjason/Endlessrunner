@@ -82,7 +82,7 @@ class GameScene: SKScene {
     private func spawnInitialChunks() {
         // Spawn 3 initial chunks to fill the screen
         Task {
-            for i in 0..<3 {
+            for _ in 0..<3 {
                 let chunkData = await levelGenerator.generateNextChunk(
                     screenWidth: size.width,
                     distance: 0
@@ -97,6 +97,9 @@ class GameScene: SKScene {
     private func setupScene() {
         backgroundColor = SKColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0)
         anchorPoint = CGPoint(x: 0, y: 0)
+        
+        // Debug: Log scene setup
+        print("🎮 GameScene initialized - Size: \(size)")
     }
 
     private func setupLayers() {
@@ -112,6 +115,9 @@ class GameScene: SKScene {
         addChild(backgroundLayer)
         addChild(gameLayer)
         addChild(foregroundLayer)
+        
+        // Debug: Log layer setup
+        print("📐 Layers created - gameLayer children: \(gameLayer.children.count)")
     }
 
     private func setupPhysics() {
@@ -138,27 +144,53 @@ class GameScene: SKScene {
         )
         groundBody.categoryBitMask = PhysicsCategory.ground
         groundBody.collisionBitMask = PhysicsCategory.player
+        groundBody.contactTestBitMask = PhysicsCategory.player  // Enable contact detection
         groundNode.physicsBody = groundBody
 
         gameLayer.addChild(groundNode)
+
+        // Debug: Log ground setup
+        print("✅ Ground created at y: \(groundHeight / 2), height: \(groundHeight)")
     }
 
     private func setupPlayer() {
         playerEntity = entityFactory.createPlayer()
 
+        // CRITICAL: Add render node to scene
+        guard let renderNode = playerEntity.renderNode else {
+            print("❌ ERROR: Player has no render node!")
+            return
+        }
+
         // Position: Fixed at 20% from left edge, ON THE GROUND
         let playerX = size.width * 0.2
         // Player sits on ground: groundHeight (80) + half player height (30) = 110
         let playerY = groundHeight + 30
-        playerEntity.position = CGPoint(x: playerX, y: playerY)
+        renderNode.position = CGPoint(x: playerX, y: playerY)
+        renderNode.zPosition = 10  // Ensure player is above ground
 
-        if let renderNode = playerEntity.renderNode {
-            renderNode.zPosition = 10  // Ensure player is above ground
-            gameLayer.addChild(renderNode)
-            print("🎮 PLAYER CREATED at position: \(playerX), \(playerY), size: 60x60, color: CYAN")
-        }
+        // Add to scene
+        gameLayer.addChild(renderNode)
 
+        // Register with systems AFTER node is added
         systemManager.registerEntity(playerEntity)
+
+        // Debug: Verify player setup
+        print("🎮 PLAYER CREATED")
+        print("   Position: \(renderNode.position)")
+        print("   Size: \(renderNode.frame.size)")
+        print("   Has physics body: \(renderNode.physicsBody != nil)")
+        print("   Alpha: \(renderNode.alpha)")
+        print("   Hidden: \(renderNode.isHidden)")
+        print("   Parent: \(renderNode.parent?.name ?? "nil")")
+
+        // Add a DEBUG marker - bright red square we KNOW will be visible
+        let debugMarker = SKSpriteNode(color: .systemRed, size: CGSize(width: 100, height: 100))
+        debugMarker.position = CGPoint(x: playerX, y: playerY)
+        debugMarker.zPosition = 100  // WAY above everything
+        debugMarker.name = "DEBUG_MARKER"
+        gameLayer.addChild(debugMarker)
+        print("🔴 DEBUG: Red marker added at same position as player")
     }
 
     private func setupBackground() {
@@ -207,6 +239,13 @@ class GameScene: SKScene {
 
         let deltaTime = currentTime - lastUpdateTime
         lastUpdateTime = currentTime
+
+        // Debug: Track player position every 60 frames (once per second at 60fps)
+        if Int(currentTime * 60) % 60 == 0 {
+            if let playerNode = playerEntity.renderNode {
+                print("🎮 Player pos: \(playerNode.position), velocity: \(playerNode.physicsBody?.velocity ?? .zero)")
+            }
+        }
 
         // Update game speed
         manager.updateSpeed(deltaTime)
@@ -290,8 +329,8 @@ class GameScene: SKScene {
 
             // Setup lifecycle callback
             if let lifecycle = obstacle.component(ofType: LifeCycleComponent.self) {
-                lifecycle.onOffscreenCallback = { [weak self] entity in
-                    self?.despawnEntity(entity as! GameEntity)
+                lifecycle.onOffscreenCallback = { [weak self] _ in
+                    self?.despawnEntity(obstacle)
                 }
             }
 
@@ -311,8 +350,8 @@ class GameScene: SKScene {
             }
 
             if let lifecycle = coin.component(ofType: LifeCycleComponent.self) {
-                lifecycle.onOffscreenCallback = { [weak self] entity in
-                    self?.despawnEntity(entity as! GameEntity)
+                lifecycle.onOffscreenCallback = { [weak self] _ in
+                    self?.despawnEntity(coin)
                 }
             }
 
@@ -366,7 +405,7 @@ class GameScene: SKScene {
 
     func resetGame() {
         // Clean up all entities
-        for entity in activeEntities {
+        for _ in activeEntities {
             // Despawn logic
         }
         activeEntities.removeAll()
@@ -380,10 +419,24 @@ class GameScene: SKScene {
 
         nextChunkSpawnX = 800
 
-        // Reset player position
+        // Reset player position and state
+        if let renderNode = playerEntity.renderNode {
+            let playerX = size.width * 0.2
+            let playerY = groundHeight + 50
+            renderNode.position = CGPoint(x: playerX, y: playerY)
+            
+            // Reset physics
+            if let physicsBody = renderNode.physicsBody {
+                physicsBody.velocity = .zero
+                physicsBody.angularVelocity = 0
+            }
+        }
+        
         if let locomotion = playerEntity.component(ofType: JumpableLocomotionComponent.self) {
             locomotion.resetJumps()
         }
+        
+        print("🔄 Game reset - Player repositioned")
     }
 }
 
@@ -434,3 +487,4 @@ extension GameScene: SKPhysicsContactDelegate {
         gameManager?.addScore(10)
     }
 }
+

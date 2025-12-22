@@ -180,5 +180,3 @@ enum Difficulty {
     case hard
 }
 
-// Make ObstacleType Sendable for actor isolation
-extension ObstacleType: Sendable {}

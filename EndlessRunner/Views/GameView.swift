@@ -27,7 +27,18 @@ struct GameView: View {
             }
         }
         .onAppear {
+            print("📱 GameView appeared")
             // Scene initialization happens in SpriteKitContainer
+            // Reset the scene when starting a new game
+            if let scene = gameScene {
+                scene.resetGame()
+            }
+        }
+        .onChange(of: gameManager.gameState) { oldValue, newValue in
+            if newValue == .playing {
+                print("🎮 Game state changed to playing, resetting scene")
+                gameScene?.resetGame()
+            }
         }
     }
 }
