@@ -57,10 +57,11 @@ class LinearMovementStrategy: MovementStrategy {
     }
 
     func update(node: SKNode, deltaTime: TimeInterval, physicsBody: SKPhysicsBody?) {
-        if let body = physicsBody {
+        if let body = physicsBody, body.isDynamic {
+            // Dynamic physics bodies (player) - use velocity
             body.velocity = velocity
         } else {
-            // Direct position update for non-physics objects (backgrounds)
+            // Non-dynamic physics (obstacles) or no physics (backgrounds) - use position
             node.position.x += velocity.dx * deltaTime
             node.position.y += velocity.dy * deltaTime
         }
