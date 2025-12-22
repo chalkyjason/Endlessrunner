@@ -51,8 +51,25 @@ class SpriteRenderComponent: RenderComponent {
     }
 
     convenience init(shapeType: ShapeType, color: SKColor, size: CGSize) {
-        let texture = ShapeTextureManager.shared.texture(for: shapeType, color: color, size: size)
-        self.init(texture: texture, size: size)
+        // CRITICAL FIX: SKSpriteNode(color:size:) needs proper setup
+        let sprite = SKSpriteNode(color: color, size: size)
+        
+        // This is the key - without this, colored sprites might not render!
+        sprite.colorBlendFactor = 1.0
+        sprite.anchorPoint = CGPoint(x: 0.5, y: 0.5)  // Center anchor
+        
+        print("🎨 Creating sprite: \(shapeType)")
+        print("   Color: \(color)")
+        print("   Size: \(size)")
+        print("   Frame: \(sprite.frame)")
+        
+        // Initialize with the sprite node
+        self.init(node: sprite)
+    }
+    
+    // Alternative initializer for direct SKSpriteNode
+    init(node: SKSpriteNode) {
+        super.init(node: node)
     }
 
     required init?(coder: NSCoder) {

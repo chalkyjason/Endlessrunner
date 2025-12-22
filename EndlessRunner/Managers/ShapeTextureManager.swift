@@ -51,10 +51,28 @@ class ShapeTextureManager {
 
         // Critical Performance Optimization: Render shape to texture once
         // This eliminates per-frame CPU rasterization
-        let texture = SKView().texture(from: shapeNode) ?? SKTexture()
+        
+        // Create a proper SKView with correct size
+        let view = SKView(frame: CGRect(origin: .zero, size: size))
+        
+        guard let texture = view.texture(from: shapeNode) else {
+            print("⚠️ WARNING: Failed to generate texture for \(shapeType), using fallback")
+            // Fallback: Create a simple colored texture
+            return createFallbackTexture(color: color, size: size)
+        }
+        
         texture.filteringMode = .nearest  // Crisp pixel art look
-
         return texture
+    }
+    
+    private func createFallbackTexture(color: SKColor, size: CGSize) -> SKTexture {
+        // Create a simple colored sprite as fallback
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            color.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+        return SKTexture(image: image)
     }
 
     private func createShapeNode(type: ShapeType, color: SKColor, size: CGSize) -> SKShapeNode {
