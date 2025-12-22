@@ -334,7 +334,11 @@ class GameScene: SKScene {
             if let node = obstacle.renderNode {
                 obstacle.position = CGPoint(x: obstacleData.relativeX, y: obstacleData.y)
                 node.zPosition = 5  // Ensure obstacles visible
-                gameLayer.addChild(node)
+
+                // Safety check: only add if not already in scene tree
+                if node.parent == nil {
+                    gameLayer.addChild(node)
+                }
                 print("  ⚠️ OBSTACLE at x:\(obstacleData.relativeX), y:\(obstacleData.y)")
             }
 
@@ -357,7 +361,11 @@ class GameScene: SKScene {
             if let node = coin.renderNode {
                 coin.position = CGPoint(x: coinData.relativeX, y: coinData.y)
                 node.zPosition = 5
-                gameLayer.addChild(node)
+
+                // Safety check: only add if not already in scene tree
+                if node.parent == nil {
+                    gameLayer.addChild(node)
+                }
                 print("  💰 COIN at x:\(coinData.relativeX), y:\(coinData.y)")
             }
 
