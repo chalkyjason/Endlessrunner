@@ -14,7 +14,10 @@ class GameEntity: GKEntity, Poolable {
             lifecycle.activate()
         }
 
-        if let render = component(ofType: RenderComponent.self) {
+        // Check for SpriteRenderComponent first (most common)
+        if let spriteRender = component(ofType: SpriteRenderComponent.self) {
+            spriteRender.show()
+        } else if let render = component(ofType: RenderComponent.self) {
             render.show()
         }
     }
@@ -25,7 +28,11 @@ class GameEntity: GKEntity, Poolable {
             lifecycle.deactivate()
         }
 
-        if let render = component(ofType: RenderComponent.self) {
+        // Check for SpriteRenderComponent first (most common)
+        if let spriteRender = component(ofType: SpriteRenderComponent.self) {
+            spriteRender.hide()
+            spriteRender.node.removeFromParent()
+        } else if let render = component(ofType: RenderComponent.self) {
             render.hide()
             render.node.removeFromParent()
         }

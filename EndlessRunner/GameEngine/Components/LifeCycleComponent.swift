@@ -22,7 +22,13 @@ class LifeCycleComponent: GKComponent {
 
     override func didAddToEntity() {
         super.didAddToEntity()
-        renderComponent = entity?.component(ofType: RenderComponent.self)
+
+        // Check for subclass first! GameplayKit component(ofType:) doesn't find subclasses automatically
+        if let spriteComp = entity?.component(ofType: SpriteRenderComponent.self) {
+            renderComponent = spriteComp
+        } else {
+            renderComponent = entity?.component(ofType: RenderComponent.self)
+        }
     }
 
     override func update(deltaTime seconds: TimeInterval) {

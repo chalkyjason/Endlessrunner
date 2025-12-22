@@ -330,11 +330,11 @@ class GameScene: SKScene {
         for obstacleData in chunk.obstacles {
             let obstacle = obstaclePool.spawn()
 
-            // Recreate with correct type if needed (pool optimization)
-            if let renderComp = obstacle.component(ofType: RenderComponent.self) {
+            // Use renderNode property (handles SpriteRenderComponent correctly)
+            if let node = obstacle.renderNode {
                 obstacle.position = CGPoint(x: obstacleData.relativeX, y: obstacleData.y)
-                renderComp.node.zPosition = 5  // Ensure obstacles visible
-                gameLayer.addChild(renderComp.node)
+                node.zPosition = 5  // Ensure obstacles visible
+                gameLayer.addChild(node)
                 print("  ⚠️ OBSTACLE at x:\(obstacleData.relativeX), y:\(obstacleData.y)")
             }
 
@@ -353,10 +353,11 @@ class GameScene: SKScene {
         for coinData in chunk.coins {
             let coin = coinPool.spawn()
 
-            if let renderComp = coin.component(ofType: RenderComponent.self) {
+            // Use renderNode property (handles SpriteRenderComponent correctly)
+            if let node = coin.renderNode {
                 coin.position = CGPoint(x: coinData.relativeX, y: coinData.y)
-                renderComp.node.zPosition = 5
-                gameLayer.addChild(renderComp.node)
+                node.zPosition = 5
+                gameLayer.addChild(node)
                 print("  💰 COIN at x:\(coinData.relativeX), y:\(coinData.y)")
             }
 
