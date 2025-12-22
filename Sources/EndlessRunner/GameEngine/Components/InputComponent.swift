@@ -3,6 +3,7 @@ import SpriteKit
 
 /// InputComponent - Maps GameManager input states to entity actions
 /// Moderate reusability: Specific to player-controlled entities
+@MainActor
 class InputComponent: GKComponent {
     weak var gameManager: GameManager?
     weak var locomotionComponent: JumpableLocomotionComponent?

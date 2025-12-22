@@ -357,7 +357,14 @@ class GameScene: SKScene {
 // MARK: - Physics Contact Delegate
 
 extension GameScene: SKPhysicsContactDelegate {
-    func didBegin(_ contact: SKPhysicsContact) {
+    nonisolated func didBegin(_ contact: SKPhysicsContact) {
+        // Schedule on main actor since we're accessing @MainActor isolated properties
+        MainActor.assumeIsolated {
+            handleContactOnMainActor(contact)
+        }
+    }
+
+    private func handleContactOnMainActor(_ contact: SKPhysicsContact) {
         let collision = contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask
 
         // Player + Obstacle
