@@ -35,6 +35,31 @@ struct MenuView: View {
                 .font(.system(size: 16, design: .monospaced))
                 .foregroundColor(.gray)
 
+            // High Scores Display
+            if gameManager.highScore > 0 {
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("HIGH SCORE:")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(.yellow)
+                        Text("\(gameManager.highScore)")
+                            .font(.system(size: 20, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white)
+                    }
+                    HStack {
+                        Text("BEST DISTANCE:")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(.yellow)
+                        Text(String(format: "%.0f m", gameManager.highDistance))
+                            .font(.system(size: 20, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding()
+                .background(Color.yellow.opacity(0.1))
+                .cornerRadius(8)
+            }
+
             VStack(spacing: 20) {
                 Button(action: {
                     gameManager.startGame()
@@ -44,6 +69,17 @@ struct MenuView: View {
                         .foregroundColor(.black)
                         .frame(width: 250, height: 60)
                         .background(Color.white)
+                        .cornerRadius(12)
+                }
+
+                Button(action: {
+                    exit(0)
+                }) {
+                    Text("EXIT")
+                        .font(.system(size: 20, weight: .semibold, design: .monospaced))
+                        .foregroundColor(.white)
+                        .frame(width: 250, height: 50)
+                        .background(Color.red.opacity(0.3))
                         .cornerRadius(12)
                 }
 
@@ -90,6 +126,19 @@ struct GameOverView: View {
             }
             .padding()
             .background(Color.white.opacity(0.1))
+            .cornerRadius(12)
+
+            // High Scores Section
+            VStack(spacing: 12) {
+                Text("🏆 HIGH SCORES 🏆")
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .foregroundColor(.yellow)
+
+                ScoreDisplayRow(label: "BEST SCORE", value: String(gameManager.highScore))
+                ScoreDisplayRow(label: "BEST DISTANCE", value: String(format: "%.0f m", gameManager.highDistance))
+            }
+            .padding()
+            .background(Color.yellow.opacity(0.1))
             .cornerRadius(12)
 
             HStack(spacing: 20) {

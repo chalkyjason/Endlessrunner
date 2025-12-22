@@ -12,6 +12,13 @@ class GameManager: ObservableObject {
     @Published var gameState: GameState = .menu
     @Published var health: Int = 3
     @Published var isPaused: Bool = false
+    @Published var highScore: Int = 0
+    @Published var highDistance: Double = 0.0
+
+    // MARK: - UserDefaults Keys
+
+    private let highScoreKey = "EndlessRunner.HighScore"
+    private let highDistanceKey = "EndlessRunner.HighDistance"
 
     // MARK: - Game Configuration
 
@@ -24,6 +31,12 @@ class GameManager: ObservableObject {
 
     var isJumpPressed: Bool = false
     var isSlidePressed: Bool = false
+
+    // MARK: - Initialization
+
+    init() {
+        loadHighScores()
+    }
 
     // MARK: - Game Control Methods
 
@@ -46,6 +59,7 @@ class GameManager: ObservableObject {
 
     func gameOver() {
         gameState = .gameOver
+        updateHighScores()
     }
 
     func returnToMenu() {
@@ -77,6 +91,33 @@ class GameManager: ObservableObject {
 
     func heal() {
         health = min(health + 1, 3)
+    }
+
+    // MARK: - High Score Management
+
+    private func loadHighScores() {
+        highScore = UserDefaults.standard.integer(forKey: highScoreKey)
+        highDistance = UserDefaults.standard.double(forKey: highDistanceKey)
+    }
+
+    private func updateHighScores() {
+        var updated = false
+
+        if score > highScore {
+            highScore = score
+            UserDefaults.standard.set(highScore, forKey: highScoreKey)
+            updated = true
+        }
+
+        if distance > highDistance {
+            highDistance = distance
+            UserDefaults.standard.set(highDistance, forKey: highDistanceKey)
+            updated = true
+        }
+
+        if updated {
+            print("🏆 NEW HIGH SCORE! Score: \(highScore), Distance: \(String(format: "%.0f", highDistance))m")
+        }
     }
 }
 

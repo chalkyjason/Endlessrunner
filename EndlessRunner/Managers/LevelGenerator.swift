@@ -93,7 +93,8 @@ actor LevelGenerator {
             return ChunkData(obstacles: [], coins: [], startX: lastChunkEnd, length: 500)
         }
 
-        let startX = lastChunkEnd + screenWidth
+        // First chunk starts visible on right edge, subsequent chunks continue with small gap
+        let startX = lastChunkEnd == 0 ? screenWidth * 0.5 : lastChunkEnd + 50
         let absoluteObstacles = selectedChunk.obstacles.map { obstacle in
             ObstacleData(
                 type: obstacle.type,
