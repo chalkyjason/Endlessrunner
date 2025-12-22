@@ -32,6 +32,7 @@ class GameScene: SKScene {
 
     private var playerEntity: GameEntity!
     private var activeEntities: Set<ObjectIdentifier> = []
+    private var entitiesToDespawn: [GameEntity] = []  // Defer despawn to avoid mutation-while-iterating
 
     // MARK: - Scene Layers (Parallax)
 
@@ -244,6 +245,9 @@ class GameScene: SKScene {
         // Apply velocity-based scaling to player (visual feedback)
         updatePlayerScale()
 
+        // Process deferred despawns (after iteration completes to avoid mutation-while-iterating crash)
+        processPendingDespawns()
+
         // Procedural generation
         checkAndSpawnChunks()
 
@@ -342,10 +346,11 @@ class GameScene: SKScene {
                 print("  ⚠️ OBSTACLE at x:\(obstacleData.relativeX), y:\(obstacleData.y)")
             }
 
-            // Setup lifecycle callback
+            // Setup lifecycle callback - defer despawn to avoid mutation-while-iterating
             if let lifecycle = obstacle.component(ofType: LifeCycleComponent.self) {
-                lifecycle.onOffscreenCallback = { [weak self] _ in
-                    self?.despawnEntity(obstacle)
+                lifecycle.onOffscreenCallback = { [weak self] entity in
+                    guard let self = self, let gameEntity = entity as? GameEntity else { return }
+                    self.entitiesToDespawn.append(gameEntity)
                 }
             }
 
@@ -369,9 +374,11 @@ class GameScene: SKScene {
                 print("  💰 COIN at x:\(coinData.relativeX), y:\(coinData.y)")
             }
 
+            // Setup lifecycle callback - defer despawn to avoid mutation-while-iterating
             if let lifecycle = coin.component(ofType: LifeCycleComponent.self) {
-                lifecycle.onOffscreenCallback = { [weak self] _ in
-                    self?.despawnEntity(coin)
+                lifecycle.onOffscreenCallback = { [weak self] entity in
+                    guard let self = self, let gameEntity = entity as? GameEntity else { return }
+                    self.entitiesToDespawn.append(gameEntity)
                 }
             }
 
@@ -380,6 +387,15 @@ class GameScene: SKScene {
         }
 
         nextChunkSpawnX = chunk.startX + chunk.length
+    }
+
+    private func processPendingDespawns() {
+        // Process all entities marked for despawn during the update loop
+        // This avoids mutation-while-iterating crashes
+        for entity in entitiesToDespawn {
+            despawnEntity(entity)
+        }
+        entitiesToDespawn.removeAll(keepingCapacity: true)  // Keep capacity for performance
     }
 
     private func despawnEntity(_ entity: GameEntity) {
