@@ -42,7 +42,16 @@ class GameEntity: GKEntity, Poolable {
     // MARK: - Convenience Accessors
 
     var renderNode: SKNode? {
-        return component(ofType: RenderComponent.self)?.node
+        let comp = component(ofType: RenderComponent.self)
+        print("🔍 renderNode getter - Has component: \(comp != nil)")
+        if comp == nil {
+            print("   ❌ NO RENDER COMPONENT!")
+            print("   Entity has \(components.count) components:")
+            for c in components {
+                print("      - \(type(of: c))")
+            }
+        }
+        return comp?.node
     }
 
     var position: CGPoint {
