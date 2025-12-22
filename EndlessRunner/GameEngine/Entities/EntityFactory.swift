@@ -17,15 +17,15 @@ class EntityFactory {
         let entity = GameEntity()
         entity.entityType = .player
 
-        // Visual: Blue square
+        // Visual: BRIGHT CYAN square (highly visible!)
         let renderComponent = SpriteRenderComponent(
             shapeType: .square,
-            color: .systemBlue,
-            size: CGSize(width: 50, height: 50)
+            color: SKColor.cyan,  // Bright cyan instead of system blue
+            size: CGSize(width: 60, height: 60)  // Bigger! Was 50x50
         )
 
         // Physics: Circle collider for smooth collisions
-        let physicsBody = PhysicsFactory.createCircleBody(radius: 25, dynamic: true)
+        let physicsBody = PhysicsFactory.createCircleBody(radius: 30, dynamic: true)
         physicsBody.mass = 1.0
         let physicsComponent = PhysicsComponent(body: physicsBody)
         physicsComponent.setBitmasks(
@@ -38,7 +38,7 @@ class EntityFactory {
         let locomotionComponent = JumpableLocomotionComponent(
             strategy: StationaryStrategy()
         )
-        locomotionComponent.jumpImpulse = 800
+        locomotionComponent.jumpImpulse = 1000  // Higher jump! Was 800
 
         // Input handling
         let inputComponent = InputComponent(gameManager: gameManager)
@@ -168,13 +168,17 @@ enum ObstacleType {
     var visualConfig: (ShapeType, SKColor, CGSize) {
         switch self {
         case .spike:
-            return (.triangle, .systemRed, CGSize(width: 40, height: 60))
+            // Deadly red spike - BIGGER and BRIGHTER!
+            return (.triangle, SKColor.red, CGSize(width: 60, height: 80))
         case .block:
-            return (.square, .systemOrange, CGSize(width: 60, height: 60))
+            // Orange block - BIGGER!
+            return (.square, SKColor.orange, CGSize(width: 70, height: 70))
         case .triangle:
-            return (.triangle, .systemPurple, CGSize(width: 50, height: 50))
+            // Purple triangle - BIGGER!
+            return (.triangle, SKColor.magenta, CGSize(width: 65, height: 65))
         case .diamond:
-            return (.diamond, .systemPink, CGSize(width: 45, height: 45))
+            // Pink diamond - BIGGER!
+            return (.diamond, SKColor.systemPink, CGSize(width: 60, height: 60))
         }
     }
 }

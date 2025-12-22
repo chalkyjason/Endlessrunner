@@ -146,14 +146,16 @@ class GameScene: SKScene {
     private func setupPlayer() {
         playerEntity = entityFactory.createPlayer()
 
-        // Position: Fixed at 20% from left edge, above ground
+        // Position: Fixed at 20% from left edge, ON THE GROUND
         let playerX = size.width * 0.2
-        let playerY = groundHeight + 100
+        // Player sits on ground: groundHeight (80) + half player height (30) = 110
+        let playerY = groundHeight + 30
         playerEntity.position = CGPoint(x: playerX, y: playerY)
 
         if let renderNode = playerEntity.renderNode {
             renderNode.zPosition = 10  // Ensure player is above ground
             gameLayer.addChild(renderNode)
+            print("🎮 PLAYER CREATED at position: \(playerX), \(playerY), size: 60x60, color: CYAN")
         }
 
         systemManager.registerEntity(playerEntity)
@@ -272,6 +274,8 @@ class GameScene: SKScene {
     }
 
     private func spawnChunk(_ chunk: ChunkData) {
+        print("🎯 SPAWNING CHUNK: \(chunk.obstacles.count) obstacles, \(chunk.coins.count) coins")
+
         // Spawn obstacles
         for obstacleData in chunk.obstacles {
             let obstacle = obstaclePool.spawn()
@@ -279,7 +283,9 @@ class GameScene: SKScene {
             // Recreate with correct type if needed (pool optimization)
             if let renderComp = obstacle.component(ofType: RenderComponent.self) {
                 obstacle.position = CGPoint(x: obstacleData.relativeX, y: obstacleData.y)
+                renderComp.node.zPosition = 5  // Ensure obstacles visible
                 gameLayer.addChild(renderComp.node)
+                print("  ⚠️ OBSTACLE at x:\(obstacleData.relativeX), y:\(obstacleData.y)")
             }
 
             // Setup lifecycle callback
@@ -299,7 +305,9 @@ class GameScene: SKScene {
 
             if let renderComp = coin.component(ofType: RenderComponent.self) {
                 coin.position = CGPoint(x: coinData.relativeX, y: coinData.y)
+                renderComp.node.zPosition = 5
                 gameLayer.addChild(renderComp.node)
+                print("  💰 COIN at x:\(coinData.relativeX), y:\(coinData.y)")
             }
 
             if let lifecycle = coin.component(ofType: LifeCycleComponent.self) {
