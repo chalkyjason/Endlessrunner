@@ -164,8 +164,8 @@ class GameScene: SKScene {
 
         // Position: Fixed at 20% from left edge, ON THE GROUND
         let playerX = size.width * 0.2
-        // Player sits on ground: groundHeight (80) + half player height (30) = 110
-        let playerY = groundHeight + 30
+        // Player sits on ground: groundHeight (80) + half player height (20) = 100
+        let playerY = groundHeight + 20
         renderNode.position = CGPoint(x: playerX, y: playerY)
         renderNode.zPosition = 10  // Ensure player is above ground
 
@@ -174,23 +174,6 @@ class GameScene: SKScene {
 
         // Register with systems AFTER node is added
         systemManager.registerEntity(playerEntity)
-
-        // Debug: Verify player setup
-        print("🎮 PLAYER CREATED")
-        print("   Position: \(renderNode.position)")
-        print("   Size: \(renderNode.frame.size)")
-        print("   Has physics body: \(renderNode.physicsBody != nil)")
-        print("   Alpha: \(renderNode.alpha)")
-        print("   Hidden: \(renderNode.isHidden)")
-        print("   Parent: \(renderNode.parent?.name ?? "nil")")
-
-        // Add a DEBUG marker - bright red square we KNOW will be visible
-        let debugMarker = SKSpriteNode(color: .systemRed, size: CGSize(width: 100, height: 100))
-        debugMarker.position = CGPoint(x: playerX, y: playerY)
-        debugMarker.zPosition = 100  // WAY above everything
-        debugMarker.name = "DEBUG_MARKER"
-        gameLayer.addChild(debugMarker)
-        print("🔴 DEBUG: Red marker added at same position as player")
     }
 
     private func setupBackground() {
@@ -258,6 +241,9 @@ class GameScene: SKScene {
         // Update all ECS systems
         systemManager.update(deltaTime: deltaTime)
 
+        // Apply velocity-based scaling to player (visual feedback)
+        updatePlayerScale()
+
         // Procedural generation
         checkAndSpawnChunks()
 
@@ -292,6 +278,31 @@ class GameScene: SKScene {
                 strategy.setVelocity(CGVector(dx: -speed * layerMultiplier, dy: 0))
             }
         }
+    }
+
+    private func updatePlayerScale() {
+        guard let playerNode = playerEntity.renderNode,
+              let velocity = playerNode.physicsBody?.velocity else { return }
+
+        // Scale width based on Y velocity (faster = wider)
+        // Falling: negative velocity -> wider (up to 1.5x)
+        // Rising: positive velocity -> narrower (down to 0.8x)
+        let maxFallSpeed: CGFloat = 800  // Terminal velocity
+        let maxRiseSpeed: CGFloat = 1000  // Jump impulse
+
+        let velocityRatio: CGFloat
+        if velocity.dy < 0 {
+            // Falling - get wider
+            velocityRatio = min(abs(velocity.dy) / maxFallSpeed, 1.0)
+            playerNode.xScale = 1.0 + (velocityRatio * 0.5)  // 1.0 to 1.5
+        } else {
+            // Rising - get narrower
+            velocityRatio = min(velocity.dy / maxRiseSpeed, 1.0)
+            playerNode.xScale = 1.0 - (velocityRatio * 0.2)  // 1.0 to 0.8
+        }
+
+        // Keep Y scale constant (height doesn't change)
+        playerNode.yScale = 1.0
     }
 
     private func checkAndSpawnChunks() {

@@ -21,8 +21,13 @@ class PhysicsComponent: GKComponent {
     override func didAddToEntity() {
         super.didAddToEntity()
 
-        // Automatic dependency injection
-        renderComponent = entity?.component(ofType: RenderComponent.self)
+        // Automatic dependency injection - check for subclass first!
+        // GameplayKit component(ofType:) doesn't find subclasses automatically
+        if let spriteComp = entity?.component(ofType: SpriteRenderComponent.self) {
+            renderComponent = spriteComp
+        } else {
+            renderComponent = entity?.component(ofType: RenderComponent.self)
+        }
 
         if let node = renderComponent?.node {
             node.physicsBody = physicsBody

@@ -17,15 +17,15 @@ class EntityFactory {
         let entity = GameEntity()
         entity.entityType = .player
 
-        // Visual: BRIGHT CYAN square (highly visible!)
+        // Visual: BRIGHT CYAN square (smaller for better screen fit)
         let renderComponent = SpriteRenderComponent(
             shapeType: .square,
             color: SKColor.cyan,  // Bright cyan instead of system blue
-            size: CGSize(width: 60, height: 60)  // Bigger! Was 50x50
+            size: CGSize(width: 40, height: 40)  // Smaller for better gameplay
         )
 
         // Physics: Circle collider for smooth collisions
-        let physicsBody = PhysicsFactory.createCircleBody(radius: 30, dynamic: true)
+        let physicsBody = PhysicsFactory.createCircleBody(radius: 20, dynamic: true)
         physicsBody.mass = 1.0
         let physicsComponent = PhysicsComponent(body: physicsBody)
         physicsComponent.setBitmasks(
