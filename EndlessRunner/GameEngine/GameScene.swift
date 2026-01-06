@@ -173,6 +173,10 @@ class GameScene: SKScene {
         // Add to scene
         gameLayer.addChild(renderNode)
 
+        // Add particle trail for visual flair (Geometry Dash style!)
+        let trail = ParticleFactory.createPlayerTrail()
+        renderNode.addChild(trail)
+
         // Register with systems AFTER node is added
         systemManager.registerEntity(playerEntity)
     }
@@ -286,7 +290,8 @@ class GameScene: SKScene {
 
     private func updatePlayerScale() {
         guard let playerNode = playerEntity.renderNode,
-              let velocity = playerNode.physicsBody?.velocity else { return }
+              let velocity = playerNode.physicsBody?.velocity,
+              let sprite = playerNode as? SKSpriteNode else { return }
 
         // Scale width based on Y velocity (faster = wider)
         // Falling: negative velocity -> wider (up to 1.5x)
@@ -307,6 +312,33 @@ class GameScene: SKScene {
 
         // Keep Y scale constant (height doesn't change)
         playerNode.yScale = 1.0
+
+        // Geometry Dash style: Color shifts with game speed!
+        if let manager = gameManager {
+            let speedRatio = (manager.currentSpeed - manager.baseSpeed) / (manager.maxSpeed - manager.baseSpeed)
+
+            // Cyan -> Magenta -> Yellow as speed increases
+            if speedRatio < 0.5 {
+                // Cyan to Magenta
+                let t = speedRatio * 2.0
+                sprite.color = SKColor(
+                    red: t,
+                    green: 1.0 - t,
+                    blue: 1.0,
+                    alpha: 1.0
+                )
+            } else {
+                // Magenta to Yellow
+                let t = (speedRatio - 0.5) * 2.0
+                sprite.color = SKColor(
+                    red: 1.0,
+                    green: t,
+                    blue: 1.0 - t,
+                    alpha: 1.0
+                )
+            }
+            sprite.colorBlendFactor = 1.0
+        }
     }
 
     private func checkAndSpawnChunks() {
@@ -342,6 +374,11 @@ class GameScene: SKScene {
                 // Safety check: only add if not already in scene tree
                 if node.parent == nil {
                     gameLayer.addChild(node)
+
+                    // Geometry Dash style: Rotate obstacles continuously!
+                    let rotateAction = SKAction.rotate(byAngle: .pi * 2, duration: 2.0)
+                    let repeatRotate = SKAction.repeatForever(rotateAction)
+                    node.run(repeatRotate, withKey: "obstacleRotation")
                 }
                 print("  ⚠️ OBSTACLE at x:\(obstacleData.relativeX), y:\(obstacleData.y)")
             }
@@ -370,6 +407,18 @@ class GameScene: SKScene {
                 // Safety check: only add if not already in scene tree
                 if node.parent == nil {
                     gameLayer.addChild(node)
+
+                    // Geometry Dash style: Coins pulse and rotate!
+                    let scaleUp = SKAction.scale(to: 1.2, duration: 0.5)
+                    let scaleDown = SKAction.scale(to: 1.0, duration: 0.5)
+                    let pulse = SKAction.sequence([scaleUp, scaleDown])
+                    let repeatPulse = SKAction.repeatForever(pulse)
+                    node.run(repeatPulse, withKey: "coinPulse")
+
+                    // Rotate slowly
+                    let rotateAction = SKAction.rotate(byAngle: .pi * 2, duration: 3.0)
+                    let repeatRotate = SKAction.repeatForever(rotateAction)
+                    node.run(repeatRotate, withKey: "coinRotation")
                 }
                 print("  💰 COIN at x:\(coinData.relativeX), y:\(coinData.y)")
             }
@@ -503,6 +552,17 @@ extension GameScene: SKPhysicsContactDelegate {
         if collision == (PhysicsCategory.player | PhysicsCategory.ground) {
             if let locomotion = playerEntity.component(ofType: JumpableLocomotionComponent.self) {
                 locomotion.land()
+
+                // Landing explosion effect!
+                if let playerNode = playerEntity.renderNode {
+                    let explosion = ParticleFactory.createLandingExplosion(at: playerNode.position)
+                    gameLayer.addChild(explosion)
+
+                    // Remove emitter after particles are done
+                    let wait = SKAction.wait(forDuration: 0.5)
+                    let remove = SKAction.removeFromParent()
+                    explosion.run(SKAction.sequence([wait, remove]))
+                }
             }
         }
     }
@@ -510,14 +570,36 @@ extension GameScene: SKPhysicsContactDelegate {
     private func handlePlayerObstacleCollision() {
         gameManager?.takeDamage()
 
-        // Optional: Flash effect or knockback
+        // Death explosion if health runs out
+        if let manager = gameManager, manager.health <= 0 {
+            if let playerNode = playerEntity.renderNode {
+                let explosion = ParticleFactory.createDeathExplosion(color: .cyan)
+                explosion.position = playerNode.position
+                gameLayer.addChild(explosion)
+
+                // Remove after explosion
+                let wait = SKAction.wait(forDuration: 0.7)
+                let remove = SKAction.removeFromParent()
+                explosion.run(SKAction.sequence([wait, remove]))
+            }
+        }
     }
 
     private func handlePlayerCoinCollision(_ contact: SKPhysicsContact) {
         let coinBody = contact.bodyA.categoryBitMask == PhysicsCategory.coin ? contact.bodyA : contact.bodyB
 
+        // Coin sparkle effect!
+        if let coinNode = coinBody.node {
+            let sparkle = ParticleFactory.createCoinSparkle(at: coinNode.position)
+            gameLayer.addChild(sparkle)
+
+            // Remove sparkle after done
+            let wait = SKAction.wait(forDuration: 0.4)
+            let remove = SKAction.removeFromParent()
+            sparkle.run(SKAction.sequence([wait, remove]))
+        }
+
         // Find entity and despawn
-        // (Simplified - would need entity lookup)
         coinBody.node?.removeFromParent()
 
         gameManager?.addScore(10)
