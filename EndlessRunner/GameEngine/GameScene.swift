@@ -271,11 +271,6 @@ class GameScene: SKScene {
     private func updateWorldVelocity(speed: CGFloat) {
         let velocity = CGVector(dx: -speed, dy: 0)
 
-        // Update all moving entities
-        for entity in activeEntities {
-            // (This would be optimized with entity references)
-        }
-
         // Update obstacle/coin velocities via their locomotion components
         for component in systemManager.locomotionSystem.components {
             if let linearStrategy = component.movementStrategy as? LinearMovementStrategy {
