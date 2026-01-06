@@ -63,6 +63,28 @@ actor LevelGenerator {
                 CoinData(relativeX: 2.25, y: 150)
             ],
             length: 550
+        ),
+        LevelChunk(
+            obstacles: [
+                ObstacleData(type: .hexagon, relativeX: 1.0, y: 100),
+                ObstacleData(type: .circle, relativeX: 2.5, y: 100),
+                ObstacleData(type: .hexagon, relativeX: 4.0, y: 100)
+            ],
+            coins: [
+                CoinData(relativeX: 1.75, y: 220),
+                CoinData(relativeX: 3.25, y: 220)
+            ],
+            length: 650
+        ),
+        LevelChunk(
+            obstacles: [
+                ObstacleData(type: .pillar, relativeX: 1.5, y: 140),
+                ObstacleData(type: .star, relativeX: 3.0, y: 100)
+            ],
+            coins: [
+                CoinData(relativeX: 2.25, y: 250)
+            ],
+            length: 600
         )
     ]
 
@@ -80,6 +102,35 @@ actor LevelGenerator {
                 CoinData(relativeX: 3.5, y: 240)
             ],
             length: 700
+        ),
+        LevelChunk(
+            obstacles: [
+                ObstacleData(type: .hexagon, relativeX: 0.5, y: 100),
+                ObstacleData(type: .circle, relativeX: 1.2, y: 100),
+                ObstacleData(type: .hexagon, relativeX: 1.9, y: 100),
+                ObstacleData(type: .star, relativeX: 2.8, y: 100),
+                ObstacleData(type: .pillar, relativeX: 4.0, y: 140)
+            ],
+            coins: [
+                CoinData(relativeX: 0.8, y: 220),
+                CoinData(relativeX: 2.3, y: 240),
+                CoinData(relativeX: 3.5, y: 280)
+            ],
+            length: 750
+        ),
+        LevelChunk(
+            obstacles: [
+                ObstacleData(type: .pillar, relativeX: 1.0, y: 140),
+                ObstacleData(type: .star, relativeX: 2.0, y: 100),
+                ObstacleData(type: .pillar, relativeX: 3.0, y: 140),
+                ObstacleData(type: .circle, relativeX: 4.0, y: 100)
+            ],
+            coins: [
+                CoinData(relativeX: 1.5, y: 260),
+                CoinData(relativeX: 2.5, y: 200),
+                CoinData(relativeX: 3.5, y: 260)
+            ],
+            length: 720
         )
     ]
 

@@ -98,7 +98,13 @@ class GameScene: SKScene {
     private func setupScene() {
         backgroundColor = SKColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0)
         anchorPoint = CGPoint(x: 0, y: 0)
-        
+
+        // Setup camera for screen shake effect
+        let cam = SKCameraNode()
+        cam.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        addChild(cam)
+        camera = cam
+
         // Debug: Log scene setup
         print("🎮 GameScene initialized - Size: \(size)")
     }
@@ -249,6 +255,9 @@ class GameScene: SKScene {
         // Apply velocity-based scaling to player (visual feedback)
         updatePlayerScale()
 
+        // Geometry Dash style: Pulse background color with speed!
+        updateBackgroundPulse(currentTime: currentTime)
+
         // Process deferred despawns (after iteration completes to avoid mutation-while-iterating crash)
         processPendingDespawns()
 
@@ -339,6 +348,48 @@ class GameScene: SKScene {
             }
             sprite.colorBlendFactor = 1.0
         }
+    }
+
+    private func updateBackgroundPulse(currentTime: TimeInterval) {
+        guard let manager = gameManager else { return }
+
+        // Speed ratio: 0.0 (slow) to 1.0 (max speed)
+        let speedRatio = (manager.currentSpeed - manager.baseSpeed) / (manager.maxSpeed - manager.baseSpeed)
+
+        // Pulse frequency increases with speed (0.5 Hz to 2 Hz)
+        let pulseFrequency = 0.5 + (speedRatio * 1.5)
+        let pulseValue = sin(currentTime * pulseFrequency * .pi * 2) * 0.5 + 0.5  // 0 to 1
+
+        // Base colors shift with speed
+        let baseColor: SKColor
+        if speedRatio < 0.5 {
+            // Slow: Dark blue -> Purple
+            let t = speedRatio * 2.0
+            baseColor = SKColor(
+                red: 0.1 + (t * 0.3),      // 0.1 -> 0.4
+                green: 0.1 - (t * 0.05),   // 0.1 -> 0.05
+                blue: 0.15 + (t * 0.1),    // 0.15 -> 0.25
+                alpha: 1.0
+            )
+        } else {
+            // Fast: Purple -> Orange
+            let t = (speedRatio - 0.5) * 2.0
+            baseColor = SKColor(
+                red: 0.4 + (t * 0.3),      // 0.4 -> 0.7
+                green: 0.05 + (t * 0.2),   // 0.05 -> 0.25
+                blue: 0.25 - (t * 0.2),    // 0.25 -> 0.05
+                alpha: 1.0
+            )
+        }
+
+        // Apply pulse (brighten/darken cyclically)
+        let brightness = 0.8 + (pulseValue * 0.4)  // 0.8 to 1.2
+        backgroundColor = SKColor(
+            red: min(baseColor.cgColor.components?[0] ?? 0.1 * brightness, 1.0),
+            green: min(baseColor.cgColor.components?[1] ?? 0.1 * brightness, 1.0),
+            blue: min(baseColor.cgColor.components?[2] ?? 0.15 * brightness, 1.0),
+            alpha: 1.0
+        )
     }
 
     private func checkAndSpawnChunks() {
@@ -570,6 +621,9 @@ extension GameScene: SKPhysicsContactDelegate {
     private func handlePlayerObstacleCollision() {
         gameManager?.takeDamage()
 
+        // Small shake on hit
+        shakeScreen(intensity: 5, duration: 0.2)
+
         // Death explosion if health runs out
         if let manager = gameManager, manager.health <= 0 {
             if let playerNode = playerEntity.renderNode {
@@ -581,8 +635,28 @@ extension GameScene: SKPhysicsContactDelegate {
                 let wait = SKAction.wait(forDuration: 0.7)
                 let remove = SKAction.removeFromParent()
                 explosion.run(SKAction.sequence([wait, remove]))
+
+                // BIG shake on death!
+                shakeScreen(intensity: 20, duration: 0.5)
             }
         }
+    }
+
+    // MARK: - Screen Shake Effect
+
+    private func shakeScreen(intensity: CGFloat, duration: TimeInterval) {
+        // Shake the camera (game layer) for impact feedback
+        let shake = SKAction.sequence([
+            SKAction.moveBy(x: intensity, y: intensity, duration: duration / 8),
+            SKAction.moveBy(x: -intensity * 2, y: -intensity * 2, duration: duration / 8),
+            SKAction.moveBy(x: intensity * 2, y: intensity * 2, duration: duration / 8),
+            SKAction.moveBy(x: -intensity * 2, y: -intensity * 2, duration: duration / 8),
+            SKAction.moveBy(x: intensity * 2, y: intensity * 2, duration: duration / 8),
+            SKAction.moveBy(x: -intensity, y: -intensity, duration: duration / 8),
+            SKAction.moveBy(x: intensity, y: 0, duration: duration / 8),
+            SKAction.moveBy(x: -intensity, y: 0, duration: duration / 8)
+        ])
+        camera?.run(shake)
     }
 
     private func handlePlayerCoinCollision(_ contact: SKPhysicsContact) {

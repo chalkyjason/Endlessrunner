@@ -164,21 +164,37 @@ enum ObstacleType: Sendable {
     case block
     case triangle
     case diamond
+    case hexagon       // NEW: Geometry Dash style!
+    case circle        // NEW: Bouncy circle
+    case star          // NEW: Star obstacle
+    case pillar        // NEW: Tall pillar
 
     var visualConfig: (ShapeType, SKColor, CGSize) {
         switch self {
         case .spike:
-            // Deadly red spike - BIGGER and BRIGHTER!
-            return (.triangle, SKColor.red, CGSize(width: 60, height: 80))
+            // Deadly red spike - Sharp and dangerous!
+            return (.triangle, SKColor(red: 1.0, green: 0.0, blue: 0.2, alpha: 1.0), CGSize(width: 55, height: 75))
         case .block:
-            // Orange block - BIGGER!
-            return (.square, SKColor.orange, CGSize(width: 70, height: 70))
+            // Orange block - Classic square
+            return (.square, SKColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0), CGSize(width: 65, height: 65))
         case .triangle:
-            // Purple triangle - BIGGER!
-            return (.triangle, SKColor.magenta, CGSize(width: 65, height: 65))
+            // Magenta triangle - Vibrant!
+            return (.triangle, SKColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0), CGSize(width: 60, height: 60))
         case .diamond:
-            // Pink diamond - BIGGER!
-            return (.diamond, SKColor.systemPink, CGSize(width: 60, height: 60))
+            // Pink diamond - Rotated square
+            return (.diamond, SKColor(red: 1.0, green: 0.4, blue: 0.7, alpha: 1.0), CGSize(width: 55, height: 55))
+        case .hexagon:
+            // Cyan hexagon - Geometric and cool!
+            return (.hexagon, SKColor(red: 0.0, green: 0.8, blue: 1.0, alpha: 1.0), CGSize(width: 70, height: 70))
+        case .circle:
+            // Yellow circle - Bouncy look
+            return (.circle, SKColor(red: 1.0, green: 0.9, blue: 0.0, alpha: 1.0), CGSize(width: 60, height: 60))
+        case .star:
+            // White star - Bright and attention-grabbing
+            return (.hexagon, SKColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0), CGSize(width: 65, height: 65))
+        case .pillar:
+            // Blue tall pillar - Vertical obstacle
+            return (.square, SKColor(red: 0.2, green: 0.4, blue: 1.0, alpha: 1.0), CGSize(width: 50, height: 100))
         }
     }
 }
